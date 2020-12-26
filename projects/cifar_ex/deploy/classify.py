@@ -1,5 +1,6 @@
 import os
 
+from glob import glob
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -11,7 +12,8 @@ from projects.cifar_ex.data.dataloaders import get_loader
 
 
 # setup dataloader
-dataloader = get_loader(batch_size=1, num_workers=1, split='test')
+batch_size = 10
+dataloader = get_loader(batch_size=batch_size, num_workers=1, split='test')
 dataiter = iter(dataloader)
 
 # instantiate model
@@ -20,31 +22,34 @@ model = CifarLab.get_model()
 if torch.cuda.is_available():
     model.cuda()
 
-# load weights into model
+# grab checkpoint paths
+checkpoint_dir = '~/data/trial_run/checkpoint/'
+checkpoint_dir_expanded = os.path.expanduser(checkpoint_dir)
+checkpoint_paths = glob(checkpoint_dir_expanded + "*")
 
-# TODO: make the number of epochs dependent on the available checkpoints (use GLOB)
-for epoch in range(5):
-    checkpoint_dir = '~/data/trial_run/checkpoint/'
-    checkpoint_dir_expanded = os.path.expanduser(checkpoint_dir)
-    checkpoint = torch.load(checkpoint_dir_expanded + str(epoch) + '.pth.tar')
+for epoch, checkpoint_path in enumerate(checkpoint_paths):
+    # load weights into model
+    checkpoint = torch.load(checkpoint_path)
     model.load_state_dict(checkpoint)
 
-    num_imgs = 1000
+    num_batches = 100
 
     with torch.no_grad():
         score = 0
-        for i in range(num_imgs):
+        num_images = 0
+        for i in range(num_batches):
 
             image, label = dataiter.next()
             if torch.cuda.is_available():
                 image = image.cuda()
                 label = label.cuda()
 
-            output = F.softmax(model(image))
-            label_est = np.argmax(output.cpu().numpy())
+            output = model.predict(image)
+            label_est = torch.argmax(output, axis=-1)
 
-            if label.item() == label_est:
-                score += 1
+            score += torch.sum(label_est==label)
+            num_images += label.shape[0]
 
-        print("Accuarcy: {:.2}% @ Epoch: {}".format(
-            score / num_imgs, epoch))
+        score = score.cpu().item()
+        print("Accuarcy: {:.2}% @ Epoch: {}, num_images: {}".format(
+            score / num_batches * batch_size, epoch, num_images))

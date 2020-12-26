@@ -6,6 +6,7 @@ import numpy as np
 
 import torch
 from torch import nn
+import torch.nn.functional as F
 
 from infra.backbone import ResNet
 
@@ -29,6 +30,10 @@ class CifarResNet(nn.Module):
         feat_maps = self.backbone(x)
         flat_feat = feat_maps[-1].view(-1, self.channels[-1] * 32 * 32)
         return self.fully_connected(flat_feat)
+
+    def predict(self, x):
+        x = self.forward(x)
+        return F.softmax(x)
 
     def get_state_dict_all(self):
         state_dict = {"backbone": self.backbone.state_dict(),
