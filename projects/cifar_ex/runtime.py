@@ -29,7 +29,10 @@ class CifarLab(Lab):
         # get model
         model = self.get_model()
         if torch.cuda.is_available():
+            print("CUDA Available")
             model.cuda()
+        else:
+            print("CUDA Unavailable")
 
         # get train dl
         train_dl = self.get_train_dl(batch_size=batch_size)

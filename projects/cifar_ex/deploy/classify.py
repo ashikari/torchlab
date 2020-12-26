@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 
 from utils.logger import logger
 
@@ -14,7 +15,6 @@ dataloader = get_loader(batch_size=1, num_workers=1, split='test')
 dataiter = iter(dataloader)
 
 # instantiate model
-# model = CifarNet()
 model = CifarLab.get_model()
 
 if torch.cuda.is_available():
@@ -23,8 +23,8 @@ if torch.cuda.is_available():
 # load weights into model
 
 # TODO: make the number of epochs dependent on the available checkpoints (use GLOB)
-for epoch in range(50):
-    checkpoint_dir = '~/data/exps/trial_run'
+for epoch in range(5):
+    checkpoint_dir = '~/data/trial_run/checkpoint/'
     checkpoint_dir_expanded = os.path.expanduser(checkpoint_dir)
     checkpoint = torch.load(checkpoint_dir_expanded + str(epoch) + '.pth.tar')
     model.load_state_dict(checkpoint)
@@ -40,7 +40,7 @@ for epoch in range(50):
                 image = image.cuda()
                 label = label.cuda()
 
-            output = model(image)
+            output = F.softmax(model(image))
             label_est = np.argmax(output.cpu().numpy())
 
             if label.item() == label_est:

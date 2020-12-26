@@ -35,7 +35,8 @@ class CifarResNet(nn.Module):
                       "fully_connected": self.fully_connected.state_dict()}
         return state_dict
 
-    def load_state_dict_all(self, state_dict):
+    def load_state_dict(self, state_dict):
+        print("Loading Checkpoint")
         if "backbone" in state_dict.keys():
             self.backbone.load_state_dict(state_dict["backbone"])
         if "fully_connected" in state_dict.keys():
