@@ -14,12 +14,12 @@ class CifarResNet(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.channels = [3, 50, 100, 200]
+        self.channels = [3, 64, 128, 128, 256]
         self.backbone = ResNet(channel_list=self.channels, stride=1)
         self.fully_connected = nn.Sequential(nn.Linear(in_features=self.channels[-1] * 32 * 32,
-                                                       out_features=200),
+                                                       out_features=256),
                                              nn.ReLU(True),
-                                             nn.Linear(in_features=200,
+                                             nn.Linear(in_features=256,
                                                        out_features=10))
 
 
